@@ -23,6 +23,7 @@ import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import ru.mralexeimk.models.Graph;
 
 import java.io.IOException;
 
@@ -101,6 +102,10 @@ public class MainApplication extends Application {
         Scene scene = new Scene(createContent());
         stage.setScene(scene);
         stage.show();
+        Graph g = new Graph("(1,2);(2,3);(3,4);(2,4)", "(x,y);(x,z)->(x,z);(x,w);(y,w);(z,w)", 5);
+        g.print(g.getPoints());
+        Thread th = new Thread(g);
+        th.start();
     }
 
 

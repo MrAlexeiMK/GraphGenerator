@@ -3,15 +3,15 @@ package ru.mralexeimk.others;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Point<T> {
+public class Point<T extends Number> {
     private T x, y, z;
-    private String symbol;
+    private int id;
     private List<Point<T>> connects;
-    public Point(T x, T y, T z, String symbol) {
+    public Point(T x, T y, T z, int id) {
         this.x = x;
         this.y = y;
         this.z = z;
-        this.symbol = symbol;
+        this.id = id;
         connects = new ArrayList<>();
     }
     public void addConnect(Point<T> point) {
@@ -29,11 +29,8 @@ public class Point<T> {
     public Point<T> getConnect(int index) {
         return connects.get(index);
     }
-    public String getSymbol() {
-        return symbol;
-    }
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
+    public int getId() {
+        return id;
     }
     public T getX() {
         return x;
