@@ -26,88 +26,16 @@ import javafx.util.Duration;
 import ru.mralexeimk.models.Graph;
 
 import java.io.IOException;
+import java.util.List;
 
 public class MainApplication extends Application {
-    private Parent createContent() throws Exception {
-        Sphere sphere = new Sphere(0.5);
-        sphere.setMaterial(new PhongMaterial(Color.BLUEVIOLET));
-
-        sphere.setTranslateZ(7);
-        sphere.setTranslateX(2);
-
-        Box box = new Box(5, 5, 5);
-        box.setMaterial(new PhongMaterial(Color.RED));
-
-        Translate pivot = new Translate();
-        Rotate yRotate = new Rotate(0, Rotate.Y_AXIS);
-
-        // Create and position camera
-        PerspectiveCamera camera = new PerspectiveCamera(true);
-        camera.getTransforms().addAll (
-                pivot,
-                yRotate,
-                new Rotate(-20, Rotate.X_AXIS),
-                new Translate(0, 0, -50)
-        );
-
-        // animate the camera position.
-        Timeline timeline = new Timeline(
-                new KeyFrame(
-                        Duration.seconds(0),
-                        new KeyValue(yRotate.angleProperty(), 0)
-                ),
-                new KeyFrame(
-                        Duration.seconds(15),
-                        new KeyValue(yRotate.angleProperty(), 360)
-                )
-        );
-        timeline.setCycleCount(Timeline.INDEFINITE);
-        timeline.play();
-
-        // Build the Scene Graph
-        Group root = new Group();
-        root.getChildren().add(camera);
-        root.getChildren().add(box);
-        root.getChildren().add(sphere);
-
-        // set the pivot for the camera position animation base upon mouse clicks on objects
-        root.getChildren().stream()
-                .filter(node -> !(node instanceof Camera))
-                .forEach(node ->
-                        node.setOnMouseClicked(event -> {
-                            pivot.setX(node.getTranslateX());
-                            pivot.setY(node.getTranslateY());
-                            pivot.setZ(node.getTranslateZ());
-                        })
-                );
-
-        // Use a SubScene
-        SubScene subScene = new SubScene(
-                root,
-                300,300,
-                true,
-                SceneAntialiasing.BALANCED
-        );
-        subScene.setFill(Color.ALICEBLUE);
-        subScene.setCamera(camera);
-        Group group = new Group();
-        group.getChildren().add(subScene);
-
-        return group;
-    }
-
     @Override
-    public void start(Stage stage) throws Exception {
-        stage.setResizable(false);
-        Scene scene = new Scene(createContent());
-        stage.setScene(scene);
+    public void start(Stage stage) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("/fxml/main.fxml"));
+        stage.setTitle("Graph modeling");
+        stage.setScene(new Scene(root));
         stage.show();
-        Graph g = new Graph("(1,2);(2,3);(3,4);(2,4)", "(x,y);(x,z)->(x,z);(x,w);(y,w);(z,w)", 5);
-        g.print(g.getPoints());
-        Thread th = new Thread(g);
-        th.start();
     }
-
 
     public static void main(String[] args) {
         launch();

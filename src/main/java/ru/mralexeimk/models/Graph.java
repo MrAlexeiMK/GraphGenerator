@@ -12,30 +12,25 @@ import java.util.*;
 public class Graph implements Runnable {
     private List<Pair<Integer>> points;
     private List<Pair<String>> input_rule, output_rule;
-    private Map<Integer, Point<Double>> point_by_id;
+    private Set<Integer> unique_hashes;
     private int last_id;
-    private int step;
+    private double step;
     private boolean isRunning;
-    public Graph(String start, String rule, int step) {
+    public Graph(String start, String rule, double step) {
         this.step = step;
-        points = new ArrayList<>();
-        input_rule = new ArrayList<>();
-        output_rule = new ArrayList<>();
-        point_by_id = new HashMap<>();
-        isRunning = false;
-        last_id = 0;
+        clear();
 
         String[] spl = start.split(";");
         for(String p : spl) {
             Pair<Integer> pair = new Pair<>(p, Integer.class);
-            Point<Double> point1 = new Point<>(new Random().nextDouble()*10, new Random().nextDouble()*10,
-                    new Random().nextDouble()*10, pair.getFirst());
-            Point<Double> point2 = new Point<>(new Random().nextDouble()*10, new Random().nextDouble()*10,
-                    new Random().nextDouble()*10, pair.getSecond());
-            point_by_id.put(pair.getFirst(), point1);
-            point_by_id.put(pair.getSecond(), point2);
             last_id = Math.max(pair.getFirst(), pair.getSecond());
-            points.add(pair);
+            String hash_code1 = "("+pair.getFirst()+";"+pair.getSecond()+")";
+            String hash_code2 = "("+pair.getSecond()+";"+pair.getFirst()+")";
+            if(!containsHash(hash_code1) && !containsHash(hash_code2)) {
+                points.add(pair);
+                addHash(hash_code1);
+                addHash(hash_code2);
+            }
         }
         String input = rule.split("->")[0];
         String output = rule.split("->")[1];
@@ -51,8 +46,21 @@ public class Graph implements Runnable {
         }
     }
 
+    public void clear() {
+        points = new ArrayList<>();
+        input_rule = new ArrayList<>();
+        output_rule = new ArrayList<>();
+        unique_hashes = new HashSet<>();
+        isRunning = false;
+        last_id = 0;
+    }
+
     public int getLastId() {
         return last_id;
+    }
+
+    public void addLastId() {
+        last_id++;
     }
 
     @Override
@@ -60,7 +68,7 @@ public class Graph implements Runnable {
         isRunning = true;
         while(isRunning) {
             try {
-                Thread.sleep(step*1000);
+                Thread.sleep((long)(step*1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -145,7 +153,16 @@ public class Graph implements Runnable {
                 Map<String, Integer> map = twice.getSecond();
                 List<Pair<Integer>> new_points = new ArrayList<>();
                 for(int i = 0; i < getPointsCount(); ++i) {
-                    if(!nodes_to_remove.contains(i)) new_points.add(getConnectedPoint(i));
+                    Pair<Integer> point = getConnectedPoint(i);
+                    if(!nodes_to_remove.contains(i)) {
+                        new_points.add(point);
+                    }
+                    else {
+                        String hash_code1 = "("+point.getFirst()+";"+point.getSecond()+")";
+                        String hash_code2 = "("+point.getSecond()+";"+point.getFirst()+")";
+                        removeHash(hash_code1);
+                        removeHash(hash_code2);
+                    }
                 }
                 for(Pair<String> pair : getOutputRule()) {
                     int first = getLastId()+1;
@@ -153,20 +170,24 @@ public class Graph implements Runnable {
                         first = map.get(pair.getFirst());
                     }
                     else {
-                        Point<Double> point = new Point<>(new Random().nextDouble()*10, new Random().nextDouble()*10,
-                                new Random().nextDouble()*10, first);
-                        point_by_id.put(first, point);
+                        addLastId();
+                        map.put(pair.getFirst(), first);
                     }
                     int second = getLastId()+1;
                     if(map.containsKey(pair.getSecond())) {
                         second = map.get(pair.getSecond());
                     }
                     else {
-                        Point<Double> point = new Point<>(new Random().nextDouble() * 10, new Random().nextDouble() * 10,
-                                new Random().nextDouble() * 10, second);
-                        point_by_id.put(second, point);
+                        addLastId();
+                        map.put(pair.getSecond(), second);
                     }
-                    new_points.add(new Pair<>(first, second));
+                    String hash_code1 = "("+first+";"+second+")";
+                    String hash_code2 = "("+second+";"+first+")";
+                    if(!containsHash(hash_code1) && !containsHash(hash_code2)) {
+                        new_points.add(new Pair<>(first, second));
+                        addHash(hash_code1);
+                        addHash(hash_code2);
+                    }
                 }
                 this.points = new_points;
                 return true;
@@ -211,16 +232,26 @@ public class Graph implements Runnable {
         return getOutputRule().size();
     }
 
-    public Point<Double> getPointById(int id) {
-        return point_by_id.get(id);
-    }
-
-    public Map<Integer, Point<Double>> getPointByIdMap() {
-        return point_by_id;
-    }
-
-    public int getStep() {
+    public double getStep() {
         return step;
+    }
+
+    public Set<Integer> getUniqueHashes() {
+        return unique_hashes;
+    }
+
+    public void addHash(String str) {
+        unique_hashes.add(str.hashCode());
+    }
+
+    public boolean containsHash(String str) {
+        return unique_hashes.contains(str.hashCode());
+    }
+
+    public void removeHash(String str) {
+        try {
+            unique_hashes.remove(str.hashCode());
+        } catch(Exception e) {}
     }
 
     public void setStep(int step) {
