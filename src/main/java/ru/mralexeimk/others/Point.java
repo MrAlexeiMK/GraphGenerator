@@ -1,37 +1,44 @@
 package ru.mralexeimk.others;
 
+import javafx.scene.shape.Sphere;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Point<T extends Number> {
     private T x, y, z;
     private int id;
-    private List<Point<T>> connects;
+    private Sphere sphere;
+    private List<Integer> connects;
     public Point(T x, T y, T z, int id) {
         this.x = x;
         this.y = y;
         this.z = z;
         this.id = id;
+        sphere = new Sphere(10);
+        sphere.setTranslateX((double)x);
+        sphere.setTranslateY((double)y);
         connects = new ArrayList<>();
     }
-    public void addConnect(Point<T> point) {
-        connects.add(point);
+    public void addConnect(int c) {
+        connects.add(c);
     }
-    public void removeConnect(Point<T> point) {
-        connects.remove(point);
+    public void removeConnect(int c) {
+        connects.remove(c);
     }
-    public void clearConnect() {
+    public void clearConnects() {
         connects.clear();
     }
-    public List<Point<T>> getConnects() {
+    public List<Integer> getConnects() {
         return connects;
     }
-    public Point<T> getConnect(int index) {
+    public int getConnect(int index) {
         return connects.get(index);
     }
     public int getId() {
         return id;
     }
+    public Sphere getSphere() { return sphere; }
     public T getX() {
         return x;
     }

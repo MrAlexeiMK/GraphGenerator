@@ -1,25 +1,23 @@
 package ru.mralexeimk.models;
 
+import ru.mralexeimk.MainApplication;
 import ru.mralexeimk.others.Pair;
 import ru.mralexeimk.others.Point;
 
 import java.util.*;
 
-//input examples:
-//start: (1,2);(2,3);(3,4);(2,4)
-//rule: "(x,y);(x,z)->(x,z);(x,w);(y,w);(z,w)"
-
 public class Graph implements Runnable {
-    private List<Pair<Integer>> points;
+    private List<Pair<Integer>> points; //храним связи между нодами
     private List<Pair<String>> input_rule, output_rule;
-    private Set<Integer> unique_hashes;
+    private Set<Integer> unique_hashes; //для отсеивания одинаковых связей
+    private Map<Integer, Point<Double>> point_by_id;
     private int last_id;
     private double step;
     private boolean isRunning;
     public Graph(String start, String rule, double step) {
         this.step = step;
+        point_by_id = new HashMap<>();
         clear();
-
         String[] spl = start.split(";");
         for(String p : spl) {
             Pair<Integer> pair = new Pair<>(p, Integer.class);
@@ -32,6 +30,7 @@ public class Graph implements Runnable {
                 addHash(hash_code2);
             }
         }
+        update();
         String input = rule.split("->")[0];
         String output = rule.split("->")[1];
         spl = input.split(";");
@@ -46,11 +45,62 @@ public class Graph implements Runnable {
         }
     }
 
+    public void updateId(int id) {
+        if(!containsPoint(id)) {
+            Point<Double> point = new Point<>(new Random().nextDouble()*900,
+                    new Random().nextDouble()*500,
+                    new Random().nextDouble()*500, id);
+            point_by_id.put(id, point);
+        }
+    }
+
+    public void update() {
+        for(int i = 1; i <= getLastId(); ++i) {
+            if(containsPoint(i) && !getPoint(i).getConnects().isEmpty()) {
+                getPoint(i).clearConnects();
+            }
+        }
+        for(Pair<Integer> pair : points) {
+            int l = pair.getFirst();
+            int r = pair.getSecond();
+            updateId(l);
+            updateId(r);
+        }
+        for(Pair<Integer> pair : points) {
+            int l = pair.getFirst();
+            int r = pair.getSecond();
+            getPoint(l).addConnect(r);
+            getPoint(r).addConnect(l);
+        }
+        for(int i = 1; i <= getLastId(); ++i) {
+            if(containsPoint(i) && getPoint(i).getConnects().isEmpty()) {
+                removePoint(i);
+            }
+        }
+    }
+
+    public Point<Double> getPoint(int id) {
+        return point_by_id.get(id);
+    }
+
+    public void removePoint(int id) {
+        point_by_id.remove(id);
+    }
+
+    public boolean containsPoint(int id) {
+        return point_by_id.containsKey(id);
+    }
+
+    public Set<Integer> getKeys() {
+        return point_by_id.keySet();
+    }
+
     public void clear() {
         points = new ArrayList<>();
         input_rule = new ArrayList<>();
         output_rule = new ArrayList<>();
         unique_hashes = new HashSet<>();
+        point_by_id = new HashMap<>();
         isRunning = false;
         last_id = 0;
     }
@@ -74,6 +124,7 @@ public class Graph implements Runnable {
             }
             doStep();
             print(getPoints());
+            update();
         }
     }
 

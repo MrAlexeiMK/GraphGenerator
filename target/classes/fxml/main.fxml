@@ -11,13 +11,9 @@
 
 <VBox prefHeight="680.0" prefWidth="893.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mralexeimk.controllers.MainController">
     <children>
-        <AnchorPane prefHeight="510.0" prefWidth="894.0" style="-fx-border-color: blue;">
+        <AnchorPane fx:id="pane" prefHeight="510.0" prefWidth="894.0" style="-fx-border-color: blue;">
             <children>
-                <Sphere depthTest="ENABLE" drawMode="LINE" layoutX="324.0" layoutY="180.0" radius="50">
-                    <cursor>
-                        <Cursor fx:constant="HAND" />
-                    </cursor>
-                </Sphere>
+
             </children>
         </AnchorPane>
         <AnchorPane prefHeight="200.0" prefWidth="200.0" style="-fx-border-color: purple;">
