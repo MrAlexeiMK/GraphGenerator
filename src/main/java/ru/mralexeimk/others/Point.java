@@ -4,21 +4,36 @@ import javafx.scene.shape.Sphere;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Point<T extends Number> {
     private T x, y, z;
     private int id;
-    private Sphere sphere;
     private List<Integer> connects;
+    private boolean isDefined;
     public Point(T x, T y, T z, int id) {
         this.x = x;
         this.y = y;
         this.z = z;
         this.id = id;
-        sphere = new Sphere(10);
-        sphere.setTranslateX((double)x);
-        sphere.setTranslateY((double)y);
         connects = new ArrayList<>();
+        isDefined = true;
+    }
+    public Point(int id) {
+        this.id = id;
+        connects = new ArrayList<>();
+        isDefined = false;
+    }
+    public void setPoint(T x, T y, T z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+    public boolean isDefined() {
+        return isDefined;
+    }
+    public void define() {
+        isDefined = true;
     }
     public void addConnect(int c) {
         connects.add(c);
@@ -38,7 +53,6 @@ public class Point<T extends Number> {
     public int getId() {
         return id;
     }
-    public Sphere getSphere() { return sphere; }
     public T getX() {
         return x;
     }

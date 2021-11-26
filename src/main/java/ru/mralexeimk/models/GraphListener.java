@@ -25,7 +25,6 @@ public class GraphListener {
         try {
             if(g != null) g.clear();
             g = new Graph(nodes, rule, step);
-            g.print(g.getPoints());
             Thread th = new Thread(g);
             th.start();
         } catch(Exception e) {}

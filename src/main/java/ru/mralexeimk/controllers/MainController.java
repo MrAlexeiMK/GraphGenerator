@@ -16,17 +16,18 @@ import javafx.css.Style;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.Scene;
+import javafx.geometry.Point3D;
+import javafx.scene.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Sphere;
+import javafx.scene.shape.*;
+import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Translate;
 import javafx.util.Duration;
 import ru.mralexeimk.MainApplication;
 import ru.mralexeimk.models.Graph;
@@ -49,12 +50,21 @@ public class MainController {
     private TextField nodes, rule, freq;
     @FXML
     private AnchorPane pane;
+    @FXML
+    private TextField radius;
+    @FXML
+    private CheckBox showConnects;
+
+    private Group group;
 
     private double step = 3;
     private boolean isRunning = false;
+    private int R = 20;
 
     public void start() {
         isRunning = true;
+        SubScene subScene = (SubScene) pane.getChildren().get(0);
+        group = (Group) subScene.getRoot();
         if(nodes.getText().isEmpty() || rule.getText().isEmpty()) {
             GraphListener.initGraph("(1,2);(2,3);(3,4);(2,4)", "(x,y);(x,z)->(x,z);(x,w);(y,w);(z,w)", step);
             start.setText("Стоп");
@@ -75,14 +85,18 @@ public class MainController {
                 error.setText("Ошибка при внедрении данных");
             }
         }
+
         TimerService service = new TimerService();
         service.setPeriod(Duration.seconds(step));
         service.setOnSucceeded(t -> {
             if(!isRunning) service.cancel();
             List<Node> list = graphUpdate();
+            initRadius();
             if(list != null) {
-                pane.getChildren().clear();
-                pane.getChildren().addAll(list);
+                for(int i = group.getChildren().size()-1; i > 0; --i) {
+                    group.getChildren().remove(i);
+                }
+                group.getChildren().addAll(list);
             }
         });
         service.start();
@@ -114,18 +128,22 @@ public class MainController {
         try {
             for (int node : nodes) {
                 Point<Double> point = GraphListener.getGraph().getPoint(node);
-                Sphere sphere = point.getSphere();
+                Sphere sphere = new Sphere(R);
+                sphere.setTranslateX(point.getX());
+                sphere.setTranslateY(point.getY());
+                sphere.setTranslateZ(point.getZ());
                 sphere.setMaterial(new PhongMaterial(Color.BLUE));
                 list.add(sphere);
-                List<Integer> connects = point.getConnects();
-                for (int to : connects) {
-                    Sphere sphere2 = GraphListener.getGraph().getPoint(to).getSphere();
-                    Line line = new Line();
-                    line.setStartX(sphere.getTranslateX());
-                    line.setStartY(sphere.getTranslateY());
-                    line.setEndX(sphere2.getTranslateX());
-                    line.setEndY(sphere2.getTranslateY());
-                    list.add(line);
+            }
+            if(showConnects.isSelected()) {
+                for (int node : nodes) {
+                    Point<Double> point = GraphListener.getGraph().getPoint(node);
+                    List<Integer> connects = point.getConnects();
+                    for (int to : connects) {
+                        Point<Double> point2 = GraphListener.getGraph().getPoint(to);
+                        Cylinder line = createConnection(point, point2);
+                        list.add(line);
+                    }
                 }
             }
         } catch(Exception e) {
@@ -134,7 +152,7 @@ public class MainController {
         return list;
     }
 
-    public void stepUpdate() {
+    public void initStep() {
         step = 3;
         if(!freq.getText().isEmpty()) {
             try {
@@ -145,16 +163,50 @@ public class MainController {
         }
     }
 
+    public void initRadius() {
+        R = 20;
+        if(!radius.getText().isEmpty()) {
+            try {
+                R = Integer.parseInt(radius.getText());
+            } catch(Exception e) {
+                radius.setText("20");
+            }
+        }
+    }
+
     @FXML
     public void buttonStartClick() {
         String text = start.getText();
-        stepUpdate();
+        initStep();
+        initRadius();
         if(text.equals("Начать")) {
             start();
         }
         else if(text.equals("Стоп")) {
             stop();
         }
+    }
+
+    public Cylinder createConnection(Point<Double> from, Point<Double> to) {
+        Point3D origin = new Point3D(from.getX(), from.getY(), from.getZ());
+        Point3D target = new Point3D(to.getX(), to.getY(), to.getZ());
+        Point3D yAxis = new Point3D(0, 1, 0);
+        Point3D diff = target.subtract(origin);
+
+        double height = diff.magnitude();
+
+        Point3D mid = target.midpoint(origin);
+        Translate moveToMidpoint = new Translate(mid.getX(), mid.getY(), mid.getZ());
+
+        Point3D axisOfRotation = diff.crossProduct(yAxis);
+        double angle = Math.acos(diff.normalize().dotProduct(yAxis));
+        Rotate rotateAroundCenter = new Rotate(-Math.toDegrees(angle), axisOfRotation);
+
+        Cylinder line = new Cylinder(1, height);
+
+        line.getTransforms().addAll(moveToMidpoint, rotateAroundCenter);
+
+        return line;
     }
 
     private static class TimerService extends ScheduledService<Boolean> {

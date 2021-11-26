@@ -14,10 +14,28 @@ public class Graph implements Runnable {
     private int last_id;
     private double step;
     private boolean isRunning;
+    private static final Point<Double> center = new Point<>(420.0, 250.0, 300.0, 0);
+    private static final double R = 100;
     public Graph(String start, String rule, double step) {
         this.step = step;
-        point_by_id = new HashMap<>();
         clear();
+        initPoints(start);
+        initRule(rule);
+        update();
+    }
+
+
+    public void clear() {
+        points = new ArrayList<>();
+        input_rule = new ArrayList<>();
+        output_rule = new ArrayList<>();
+        unique_hashes = new HashSet<>();
+        point_by_id = new HashMap<>();
+        isRunning = false;
+        last_id = 0;
+    }
+
+    public void initPoints(String start) {
         String[] spl = start.split(";");
         for(String p : spl) {
             Pair<Integer> pair = new Pair<>(p, Integer.class);
@@ -30,10 +48,12 @@ public class Graph implements Runnable {
                 addHash(hash_code2);
             }
         }
-        update();
+    }
+
+    public void initRule(String rule) {
         String input = rule.split("->")[0];
         String output = rule.split("->")[1];
-        spl = input.split(";");
+        String[] spl = input.split(";");
         for(String p : spl) {
             Pair<String> pair = new Pair<>(p, String.class);
             input_rule.add(pair);
@@ -45,36 +65,64 @@ public class Graph implements Runnable {
         }
     }
 
-    public void updateId(int id) {
+    public void createPoint(int id) {
         if(!containsPoint(id)) {
-            Point<Double> point = new Point<>(new Random().nextDouble()*900,
-                    new Random().nextDouble()*500,
-                    new Random().nextDouble()*500, id);
+            Point<Double> point = new Point<>(id);
             point_by_id.put(id, point);
         }
     }
 
     public void update() {
+        //очистка предыдущих связей
         for(int i = 1; i <= getLastId(); ++i) {
-            if(containsPoint(i) && !getPoint(i).getConnects().isEmpty()) {
+            if(containsPoint(i)) {
                 getPoint(i).clearConnects();
             }
         }
+
+        //инициализация точек
         for(Pair<Integer> pair : points) {
             int l = pair.getFirst();
             int r = pair.getSecond();
-            updateId(l);
-            updateId(r);
+            createPoint(l);
+            createPoint(r);
         }
+
+        //добавление новых связей
         for(Pair<Integer> pair : points) {
             int l = pair.getFirst();
             int r = pair.getSecond();
             getPoint(l).addConnect(r);
             getPoint(r).addConnect(l);
         }
-        for(int i = 1; i <= getLastId(); ++i) {
-            if(containsPoint(i) && getPoint(i).getConnects().isEmpty()) {
-                removePoint(i);
+
+        //задание координат точкам
+        for(int node : getKeys()) {
+            Point<Double> p = getPoint(node);
+            if(!p.isDefined()) {
+                double x_m = 0, y_m = 0, z_m = 0;
+                int count = 0;
+                for(int connect : getPoint(node).getConnects()) {
+                    Point<Double> p2 = getPoint(connect);
+                    if(p2.isDefined()) {
+                        x_m += p2.getX(); y_m += p2.getY(); z_m += p2.getZ();
+                        ++count;
+                    }
+                }
+                if(count > 0) {
+                    x_m /= count; y_m /= count; z_m /= count;
+                    double x = (x_m-R) + new Random().nextDouble()*(2*R);
+                    double y = (y_m-R) + new Random().nextDouble()*(2*R);
+                    double z = (z_m-R) + new Random().nextDouble()*(2*R);
+                    p.setPoint(x, y, z);
+                }
+                else {
+                    double x = (center.getX() - 20) + new Random().nextDouble()*20;
+                    double y = (center.getY() - 20) + new Random().nextDouble()*20;
+                    double z = (center.getZ() - 20) + new Random().nextDouble()*20;
+                    p.setPoint(x, y, z);
+                }
+                p.define();
             }
         }
     }
@@ -95,16 +143,6 @@ public class Graph implements Runnable {
         return point_by_id.keySet();
     }
 
-    public void clear() {
-        points = new ArrayList<>();
-        input_rule = new ArrayList<>();
-        output_rule = new ArrayList<>();
-        unique_hashes = new HashSet<>();
-        point_by_id = new HashMap<>();
-        isRunning = false;
-        last_id = 0;
-    }
-
     public int getLastId() {
         return last_id;
     }
@@ -123,7 +161,7 @@ public class Graph implements Runnable {
                 e.printStackTrace();
             }
             doStep();
-            print(getPoints());
+            //print(getPoints());
             update();
         }
     }
