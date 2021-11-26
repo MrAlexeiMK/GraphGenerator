@@ -18,10 +18,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Point3D;
 import javafx.scene.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
@@ -32,11 +29,10 @@ import javafx.util.Duration;
 import ru.mralexeimk.MainApplication;
 import ru.mralexeimk.models.Graph;
 import ru.mralexeimk.models.GraphListener;
+import ru.mralexeimk.models.Rules;
 import ru.mralexeimk.others.Point;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,19 +50,25 @@ public class MainController {
     private TextField radius;
     @FXML
     private CheckBox showConnects;
+    @FXML
+    private CheckBox hashing;
+    @FXML
+    private ChoiceBox rules;
 
     private Group group;
 
-    private double step = 3;
+    private double step = 0.1;
     private boolean isRunning = false;
-    private int R = 20;
+    private int R = 5;
+    private Map<String, Rules> rule_by_title;
 
     public void start() {
         isRunning = true;
+        boolean doHash = hashing.isSelected();
         SubScene subScene = (SubScene) pane.getChildren().get(0);
         group = (Group) subScene.getRoot();
         if(nodes.getText().isEmpty() || rule.getText().isEmpty()) {
-            GraphListener.initGraph("(1,2);(2,3);(3,4);(2,4)", "(x,y);(x,z)->(x,z);(x,w);(y,w);(z,w)", step);
+            GraphListener.initGraph("(1,2);(2,3);(3,4);(2,4)", "(x,y);(x,z)->(x,z);(x,w);(y,w);(z,w)", step, doHash);
             start.setText("Стоп");
             nodes.setText("(1,2);(2,3);(3,4);(2,4)");
             rule.setText("(x,y);(x,z)->(x,z);(x,w);(y,w);(z,w)");
@@ -75,7 +77,7 @@ public class MainController {
         }
         else {
             try {
-                GraphListener.initGraph(nodes.getText(), rule.getText(), step);
+                GraphListener.initGraph(nodes.getText(), rule.getText(), step, doHash);
                 start.setText("Стоп");
             } catch(Exception e) {
                 if(GraphListener.getGraph() != null) {
@@ -152,26 +154,45 @@ public class MainController {
         return list;
     }
 
+    public void initRules() {
+        rule_by_title = new HashMap<>();
+        for(Rules rule : Rules.values()) {
+            rules.getItems().add(rule.getTitle());
+            rule_by_title.put(rule.getTitle(), rule);
+        }
+        rules.setOnAction(e -> {
+            Rules rule_obj = rule_by_title.get(rules.getValue().toString());
+            nodes.setText(rule_obj.getStart());
+            rule.setText(rule_obj.getRule());
+            hashing.setSelected(!rule_obj.isRepeat());
+        });
+    }
+
     public void initStep() {
-        step = 3;
+        step = 0.1;
         if(!freq.getText().isEmpty()) {
             try {
                 step = Double.parseDouble(freq.getText());
             } catch(Exception e) {
-                freq.setText("3");
+                freq.setText("0.1");
             }
         }
     }
 
     public void initRadius() {
-        R = 20;
+        R = 5;
         if(!radius.getText().isEmpty()) {
             try {
                 R = Integer.parseInt(radius.getText());
             } catch(Exception e) {
-                radius.setText("20");
+                radius.setText("5");
             }
         }
+    }
+
+    @FXML
+    public void initialize() {
+        initRules();
     }
 
     @FXML

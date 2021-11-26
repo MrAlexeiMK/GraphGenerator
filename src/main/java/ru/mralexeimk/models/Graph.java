@@ -14,16 +14,22 @@ public class Graph implements Runnable {
     private int last_id;
     private double step;
     private boolean isRunning;
+    private boolean hashing;
+    private String start_str, rule_str;
+
+
     private static final Point<Double> center = new Point<>(420.0, 250.0, 300.0, 0);
     private static final double R = 100;
-    public Graph(String start, String rule, double step) {
+    public Graph(String start, String rule, double step, boolean hashing) {
         this.step = step;
+        this.hashing = hashing;
+        this.start_str = start;
+        this.rule_str = rule;
         clear();
         initPoints(start);
         initRule(rule);
         update();
     }
-
 
     public void clear() {
         points = new ArrayList<>();
@@ -42,10 +48,15 @@ public class Graph implements Runnable {
             last_id = Math.max(pair.getFirst(), pair.getSecond());
             String hash_code1 = "("+pair.getFirst()+";"+pair.getSecond()+")";
             String hash_code2 = "("+pair.getSecond()+";"+pair.getFirst()+")";
-            if(!containsHash(hash_code1) && !containsHash(hash_code2)) {
+            if(!hashing) {
                 points.add(pair);
-                addHash(hash_code1);
-                addHash(hash_code2);
+            }
+            else {
+                if (!containsHash(hash_code1) && !containsHash(hash_code2)) {
+                    points.add(pair);
+                    addHash(hash_code1);
+                    addHash(hash_code2);
+                }
             }
         }
     }
@@ -125,6 +136,18 @@ public class Graph implements Runnable {
                 p.define();
             }
         }
+    }
+
+    public String getStartStr() {
+        return start_str;
+    }
+
+    public String getRuleStr() {
+        return rule_str;
+    }
+
+    public boolean isRepeat() {
+        return !hashing;
     }
 
     public Point<Double> getPoint(int id) {
@@ -272,10 +295,15 @@ public class Graph implements Runnable {
                     }
                     String hash_code1 = "("+first+";"+second+")";
                     String hash_code2 = "("+second+";"+first+")";
-                    if(!containsHash(hash_code1) && !containsHash(hash_code2)) {
+                    if(!hashing) {
                         new_points.add(new Pair<>(first, second));
-                        addHash(hash_code1);
-                        addHash(hash_code2);
+                    }
+                    else {
+                        if (!containsHash(hash_code1) && !containsHash(hash_code2)) {
+                            new_points.add(new Pair<>(first, second));
+                            addHash(hash_code1);
+                            addHash(hash_code2);
+                        }
                     }
                 }
                 this.points = new_points;

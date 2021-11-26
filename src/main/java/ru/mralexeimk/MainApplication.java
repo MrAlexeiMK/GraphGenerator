@@ -68,7 +68,6 @@ public class MainApplication extends Application {
 
         stage.setScene(scene);
         stage.show();
-
         pane.setOnMousePressed(mouseEvent -> {
             startX = camera.getLayoutX() - mouseEvent.getSceneX();
             startY = camera.getLayoutY() - mouseEvent.getSceneY();

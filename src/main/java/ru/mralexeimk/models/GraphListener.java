@@ -1,7 +1,5 @@
 package ru.mralexeimk.models;
 
-import ru.mralexeimk.others.Point;
-
 public class GraphListener {
     private static Graph g;
 
@@ -22,9 +20,13 @@ public class GraphListener {
     }
 
     public static void initGraph(String nodes, String rule, double step) {
+        initGraph(nodes, rule, step, true);
+    }
+
+    public static void initGraph(String nodes, String rule, double step, boolean hashing) {
         try {
             if(g != null) g.clear();
-            g = new Graph(nodes, rule, step);
+            g = new Graph(nodes, rule, step, hashing);
             Thread th = new Thread(g);
             th.start();
         } catch(Exception e) {}

@@ -10,6 +10,7 @@ public class Pair<T> {
     public Pair(String pair, Class<T> classT) {
         pair = pair.replaceAll("\\(", "");
         pair = pair.replaceAll("\\)", "");
+        pair = pair.replaceAll(" ", "");
         try {
             if(Integer.class.isAssignableFrom(classT)) {
                 this.first = classT.cast(Integer.valueOf(pair.split(",")[0]));
