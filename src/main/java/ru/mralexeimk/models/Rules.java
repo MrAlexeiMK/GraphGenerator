@@ -2,10 +2,13 @@ package ru.mralexeimk.models;
 
 public enum Rules {
     STAR("star", true, "(1,1)", "(x,x)->(x,y);(x,x)"),
+    STAR2("star-2", true, "(1,1)", "(x,x)->(x,y);(y,y);(z,z)"),
     POLYLINE("polyline", true, "(1,1)", "(x,x)->(x,y);(y,y)"),
     POLYLINE2("polyline2", true, "(1,1);(1,2)", "(x,x);(x,y)->(y,y);(y,z);(x,y);(y,x)"),
     WORMS("worms", true, "(1,2)", "(x,y)->(x,z);(z,x)"),
     WORM("worm", false, "(1,2)", "(x,y)->(y,z);(y,z)"),
+    BRANCHING_1("branching-1", true, "(1,1);(1,2);(2,2);(3,3);(4,4);", "(x,x);(x,y)->(y,y);(y,z);(x,y);(y,x)"),
+    TRIANGLES("triangles-1", true, "(1,1);(1,2);(3,4);(4,5);", "(x,x);(x,y);(a,b);(c,d)->(w,v);(v,a);(w,a);(w,w);(v,v)"),
     EXAMPLE_1("example-1", false, "(1,2);(2,3);(3,4);(2,4)", "(x,y);(x,z)->(x,z);(x,w);(y,w);(z,w)"),
     EXAMPLE_2("example-2", true, "(1,1);(1,1)", "(x,y);(y,z)->(w,w);(w,y);(w,x);(x,z)"),
     EXAMPLE_3("example-3", true, "(1,2);(2,2);(3,1);(1,4)", "(x,y);(y,y);(z,x);(x,u)->(y,v);(v,y);(y,z);(z,v);(u,v);(v,v)"),
